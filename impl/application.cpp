@@ -124,10 +124,10 @@ void Application::run()
 
     float vertices[] = {
         // positions          // colors           // texture coords
-        1.0f,  1.0f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f, // top right
-        1.0f, -1.0f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f, // bottom right
-       -1.0f, -1.0f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // bottom left
-       -1.0f,  1.0f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f  // top left
+        0.15f,  0.15f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top right
+        0.15f, -0.15f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, // bottom right
+       -0.15f, -0.15f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
+       -0.15f, 0.15f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f  // top left
     };
 
     unsigned int indices[] = {
@@ -147,13 +147,25 @@ void Application::run()
     stbi_set_flip_vertically_on_load(true);
 
     int width, height, nrChannels;
-    unsigned char* data = stbi_load("C:\\Users\\mahmu\\Desktop\\codez\\vs\\cpp\\dvd-logo-opengl\\dvd-logo-opengl\\src\\assets\\dvd.png", &width, &height, &nrChannels, 0);
+    unsigned char* data = stbi_load("C:\\Users\\mahmu\\Desktop\\codez\\vs\\cpp\\dvd-logo-opengl\\dvd-logo-opengl\\src\\assets\\dvd-logo.png", &width, &height, &nrChannels, 0);
     if (!data)
     {
         std::cerr << "Failed to load texture!" << std::endl;
         return;
     }
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+
+    GLenum format = 0;
+    if (nrChannels == 1)
+        format = GL_RED;
+    else if (nrChannels == 3)
+        format = GL_RGB;
+    else if (nrChannels == 4)
+        format = GL_RGBA;
+	else format = GL_RGB;
+
+	std::cout << "Format: " << format << " :: nrChan: " << nrChannels << std::endl; // "Format: 6407    
+
+    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
     glGenerateMipmap(GL_TEXTURE_2D);
     stbi_image_free(data);
 
@@ -179,16 +191,29 @@ void Application::run()
 
     printOpenGLInfo();
 
+	float positionModifier[] = { 0.0f, 0.0f, 0.0f };
+	float colorModifier[] = { 0.0f, 0.0f, 0.0f };
+
     shaderManager.useShaderProgram();
     glUniform1i(glGetUniformLocation(shaderManager.getShaderProgram(), "textureOne"), 0);
+	glUniform3fv(glGetUniformLocation(shaderManager.getShaderProgram(), "positionModifier"), 1, positionModifier);
+	glUniform3fv(glGetUniformLocation(shaderManager.getShaderProgram(), "colorModifier"), 1, colorModifier);
 
     while (!glfwWindowShouldClose(window) && isRunning)
     {
+		positionModifier[0] += 0.0001f;
+		positionModifier[1] += 0.0001f;
+		if (positionModifier[0] > 0.5f)
+			positionModifier[0] = -0.5f;
+		if (positionModifier[1] > 0.5f)
+			positionModifier[1] = -0.5f;
         fpsCalculate();
         processInput();
-        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         shaderManager.useShaderProgram();
+		glUniform3fv(glGetUniformLocation(shaderManager.getShaderProgram(), "positionModifier"), 1, positionModifier);
+		glUniform3fv(glGetUniformLocation(shaderManager.getShaderProgram(), "colorModifier"), 1, colorModifier);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
         glBindVertexArray(VAO);
@@ -201,3 +226,4 @@ void Application::run()
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
 }
+

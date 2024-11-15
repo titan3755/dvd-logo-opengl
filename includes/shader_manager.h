@@ -14,8 +14,8 @@ class ShaderManager
 {
 private:
 	unsigned int shaderProgram;
-	const char* vertexShaderPath = "C:\\Users\\mahmu\\Desktop\\codez\\vs\\cpp\\opengl_learning\\opengl_learning\\src\\shaders\\vrtxone.vert";
-	const char* fragmentShaderPath = "C:\\Users\\mahmu\\Desktop\\codez\\vs\\cpp\\opengl_learning\\opengl_learning\\src\\shaders\\frgone.frag";
+	const char* vertexShaderPath = "C:\\Users\\mahmu\\Desktop\\codez\\vs\\cpp\\dvd-logo-opengl\\dvd-logo-opengl\\src\\shaders\\vrtxone.vert";
+	const char* fragmentShaderPath = "C:\\Users\\mahmu\\Desktop\\codez\\vs\\cpp\\dvd-logo-opengl\\dvd-logo-opengl\\src\\shaders\\frgone.frag";
 	const char* vertexShaderSource;
 	const char* fragmentShaderSource;
 public:

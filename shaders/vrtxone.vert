@@ -4,9 +4,10 @@ layout (location = 1) in vec3 aColor;
 layout (location = 2) in vec2 aTexCoord;
 out vec3 vertexColor;
 out vec2 TexCoord;
+uniform vec3 positionModifier;
 void main() 
 {
-	gl_Position = vec4(aPos, 1.0);	
+	gl_Position = vec4(aPos + positionModifier, 1.0);	
 	vertexColor = aColor;
 	TexCoord = aTexCoord;
 }

@@ -2,6 +2,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+double msPerFrame = 0.0f;
+
 Application::Application(int width, int height, const char* title)
 {
     this->window = nullptr;
@@ -29,7 +31,7 @@ void Application::fpsCalculate()
     {
         previousSeconds = currentSeconds;
         double fps = (double)frameCount / elapsedSeconds;
-        double msPerFrame = 1000.0 / fps;
+        msPerFrame = 1000.0 / fps;
 
         char tmp[128];
         sprintf_s(tmp, "%s @ fps: %.2f, ms/frame: %.2f", title, fps, msPerFrame);
@@ -125,7 +127,7 @@ void Application::run()
     float vertices[] = {
         // positions          // colors           // texture coords
         0.15f,  0.15f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top right
-        0.15f, -0.15f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, // bottom right
+        0.15f, -0.15f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom right
        -0.15f, -0.15f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
        -0.15f, 0.15f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f  // top left
     };
@@ -192,8 +194,12 @@ void Application::run()
     printOpenGLInfo();
 
 	float positionModifier[] = { 0.0f, 0.0f, 0.0f };
-	float colorModifier[] = { 0.0f, 0.0f, 0.0f };
-
+    float clipx = 0.1f;
+	float clipy = 0.09f;
+	float colorModifier[] = { 0.5f, 0.8f, 0.2f };
+    float velocity[] = { -0.001f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 0.002f)), -0.001f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 0.002f)), 0.0f };
+	float colorChangeSpeed = 0.01f;
+    bool colorReverse = false;
     shaderManager.useShaderProgram();
     glUniform1i(glGetUniformLocation(shaderManager.getShaderProgram(), "textureOne"), 0);
 	glUniform3fv(glGetUniformLocation(shaderManager.getShaderProgram(), "positionModifier"), 1, positionModifier);
@@ -201,19 +207,35 @@ void Application::run()
 
     while (!glfwWindowShouldClose(window) && isRunning)
     {
-		positionModifier[0] += 0.0001f;
-		positionModifier[1] += 0.0001f;
-		if (positionModifier[0] > 0.5f)
-			positionModifier[0] = -0.5f;
-		if (positionModifier[1] > 0.5f)
-			positionModifier[1] = -0.5f;
+        if (colorModifier[0] >= 1.0f || colorModifier[0] <= 0.0f)
+            colorReverse = !colorReverse;
+        if (colorReverse)
+        {
+            colorModifier[0] -= colorChangeSpeed;
+            colorModifier[1] -= colorChangeSpeed;
+            colorModifier[2] -= colorChangeSpeed;
+        }
+        else
+        {
+            colorModifier[0] += colorChangeSpeed;
+            colorModifier[1] += colorChangeSpeed;
+            colorModifier[2] += colorChangeSpeed;
+        }
+
+        if (positionModifier[0] >= 1.0f - clipx || positionModifier[0] <= -1.0f + clipx)
+            velocity[0] = -velocity[0];
+        if (positionModifier[1] >= 1.0f - clipy || positionModifier[1] <= -1.0f + clipy)
+            velocity[1] = -velocity[1];
+        positionModifier[0] += velocity[0];
+        positionModifier[1] += velocity[1];
+
         fpsCalculate();
         processInput();
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         shaderManager.useShaderProgram();
-		glUniform3fv(glGetUniformLocation(shaderManager.getShaderProgram(), "positionModifier"), 1, positionModifier);
-		glUniform3fv(glGetUniformLocation(shaderManager.getShaderProgram(), "colorModifier"), 1, colorModifier);
+        glUniform3fv(glGetUniformLocation(shaderManager.getShaderProgram(), "positionModifier"), 1, positionModifier);
+        glUniform3fv(glGetUniformLocation(shaderManager.getShaderProgram(), "colorModifier"), 1, colorModifier);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
         glBindVertexArray(VAO);
@@ -221,6 +243,7 @@ void Application::run()
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
+
 
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);

@@ -7,5 +7,5 @@ uniform vec3 colorModifier;
 void main()
 {
 	vec4 texCl = texture(textureOne, TexCoord);
-	FragColor = texCl * vec4(vertexColor + colorModifier, 1.0);
+	FragColor = texCl * vec4(colorModifier, 1.0);
 }
